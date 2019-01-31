@@ -1,0 +1,21 @@
+block config
+  include config
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge,chrome=1')
+    meta(name='viewport', content='width=device-width,initial-scale=1')
+    meta(name='description', content=metaDesc)
+    title
+      block title
+        | #{pageTitle}
+    link(href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet")
+    link(rel='stylesheet', href='assets/styles/main.css', type='text/css')
+
+
+  body
+    include nav
+    .container
+      block content
+    script(src="assets/scripts/main.js")
