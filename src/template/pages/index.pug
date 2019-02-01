@@ -10,21 +10,5 @@ block content
     label.active(for='first_name2') First Name
   .row
     .col.s6.push-m3
-      ul.tabs.z-depth-1
-        li.tab.col
-          a(href='#test1') Test 1
-
-      ul.collection.with-header
-        li.collection-header
-          h4 First Names
-        li.collection-item
-          div
-            span.content
-              | Alvin
-            span.secondary-content
-              span.done.action
-                i.material-icons check
-              span.edit.action
-                i.material-icons.blue-text.text-lighten-1 edit
-              span.remove.action
-                i.material-icons.red-text.text-lighten-1 clear
+      include ../_layouts/todos/tabsLinks
+      //include ../_layouts/todos/tabsContent
