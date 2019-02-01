@@ -30,11 +30,12 @@ var TodoController = (function () {
     addTodo: function (status, value, tabId) {
       var stat, newTodo;
       stat = false;
-
       newTodo = new Todos(stat,value, tabId);
-      console.log('newTodo', newTodo);
       data.lists[tabId].items.push(newTodo);
       return newTodo;
+    },
+    completeTodo: function (obj) {
+      obj.status = !obj.status
     },
     testing: function () {
       console.log(data)
@@ -65,7 +66,6 @@ var UIController = (function () {
     getInputTodo: function (id) {
       return {
         titleTab: document.querySelector(`#${id} ${DOMStrings.inputTodo}`).value,
-
       }
     },
     addListItem: function (obj) {
@@ -83,8 +83,8 @@ var UIController = (function () {
                   <span class="">${obj.val.titleInput}</span>
                 </h4>
                 <div class="input-field col s6 " >
-                  <input class="validate inputTodo" value="Alvin" type="text" />
-                  <label class="active" >Todo</label>
+                  <input class="validate inputTodo" value="" type="text" />
+                  <label class="active" >Add Todo</label>
                 </div>
                 <span class="col s1">
                   <button class="btnAddTodo" data-index="${obj.id}" data-parent="${obj.val.titleInput}-${obj.id}"><i class="material-icons">add</i></button>
@@ -95,9 +95,7 @@ var UIController = (function () {
       elem.insertAdjacentHTML('afterend', tab);
     },
     addTodoItem: function(obj,tabId) {
-      console.log('obj',obj)
       var todo, htmlTodo;
-      console.log(`todo: #${tabId}`)
       todo = document.querySelector(`#${tabId}`);
       htmlTodo = `<li class="collection-item">
                     <div>
@@ -117,6 +115,14 @@ var UIController = (function () {
                   </li>`;
       todo.insertAdjacentHTML('beforeend', htmlTodo)
     },
+    completeTodo: function(todo) {
+      todo.classList.toggle('completed')
+      if(todo.querySelector('.done i').textContent === 'check') {
+        todo.querySelector('.done i').textContent = 'crop_square'
+      } else {
+        todo.querySelector('.done i').textContent = 'check'
+      }
+    },
     getDomStrings: function () {
       return DOMStrings
     }
@@ -128,7 +134,6 @@ var AppController = (function (TodoCtrl, UICtrl) {
   var setupEventListeners = function () {
     var addListBtn = document.querySelector(DOM.btnAddList);
     addListBtn.addEventListener('click', addListController);
-
     document.addEventListener('keypress', function (e) {
       if (e.key === "Enter" || e.keyCode === 13 || e.which === 13) {
         addListController();
@@ -139,31 +144,44 @@ var AppController = (function (TodoCtrl, UICtrl) {
 
   var addListController = function () {
     var value, newList;
-
     // 1. get Input data
     value = UICtrl.getInputValue();
-    console.log('val', value);
     document.querySelector(DOM.inputTitle).value = '';
     // 2. store the value
     newList = TodoCtrl.addItem(value);
     console.log(newList);
     // 3. Add the List in UI
     UICtrl.addListItem(newList);
-    console.log(DOM.tabTitleContentTodos);
     if (DOM.tabTitleContentTodos !== null){
       var addTodoBtns = document.querySelector(DOM.tabTitleContentTodos);
       var addBtn = document.querySelector(DOM.btnAddTodo);
       addTodoBtns.addEventListener('click', function (e) {
         if(e.target === addBtn) {
           id = e.target.dataset.parent
-          console.log('parent: ',e.target.dataset.parent)
           addTodoController(id)
         }
-        console.log(e.target)
       });
     }
-
-
+  };
+  var todoActions = function (obj ,contentToDo) {
+    var todos = document.querySelectorAll(DOM.todos);
+    todos.forEach(function (item) {
+      if (item.querySelector('.content').textContent === contentToDo) {
+        item.addEventListener('click', function (e) {
+          if(e.target.parentNode.classList.contains('done')){
+            var todo = e.target.parentNode.parentNode.parentNode.parentNode
+            TodoCtrl.completeTodo(obj);
+            UICtrl.completeTodo(todo);
+          }
+          if(e.target.parentNode.classList.contains('edit')){
+            console.log('edit')
+          }
+          if(e.target.parentNode.classList.contains('remove')){
+            console.log('remove')
+          }
+        })
+      }
+    })
 
   };
   var addTodoController= function (id) {
@@ -178,7 +196,10 @@ var AppController = (function (TodoCtrl, UICtrl) {
     //status, value, tabId
     todoValue = TodoCtrl.addTodo(false, val, tabIndex);
     // 4. add new todo
-    UICtrl.addTodoItem(todoValue, id)
+    UICtrl.addTodoItem(todoValue, id);
+    document.querySelector(DOM.inputTodo).value = ''
+
+    todoActions(todoValue, todoValue.val);
   };
   return {
     init: function () {
