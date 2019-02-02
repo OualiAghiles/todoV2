@@ -38,8 +38,10 @@ var TodoController = (function () {
       obj.status = !obj.status
     },
     updateTodo: function(obj, newVal) {
-      console.log(obj)
       obj.val = newVal
+    },
+    removeTodo: function(obj) {
+      data.lists[obj.tabId].items.splice(data.lists[obj.tabId].items.indexOf(obj), 1)
     },
     testing: function () {
       console.log(data)
@@ -75,7 +77,6 @@ var UIController = (function () {
     addListItem: function (obj) {
       var html, elem, tab;
       elem = document.querySelector(DOMStrings.tabs);
-      console.log(obj)
       html =
         `<li class="tab col" id="${obj.id}">
           <a href="#${obj.val.titleInput}">${obj.val.titleInput}</a>
@@ -145,12 +146,14 @@ var UIController = (function () {
         inputEdit.classList.toggle("hide")
       })
     },
+    removedTodo: function(obj, todo) {
+      todo.parentNode.removeChild(todo)
+    },
     getDomStrings: function () {
       return DOMStrings
     }
   }
 })();
-
 var AppController = (function (TodoCtrl, UICtrl) {
   var DOM = UICtrl.getDomStrings();
   var setupEventListeners = function () {
@@ -161,9 +164,7 @@ var AppController = (function (TodoCtrl, UICtrl) {
         addListController();
       }
     });
-
   };
-
   var addListController = function () {
     var value, newList;
     // 1. get Input data
@@ -171,7 +172,6 @@ var AppController = (function (TodoCtrl, UICtrl) {
     document.querySelector(DOM.inputTitle).value = '';
     // 2. store the value
     newList = TodoCtrl.addItem(value);
-    console.log(newList);
     // 3. Add the List in UI
     UICtrl.addListItem(newList);
     if (DOM.tabTitleContentTodos !== null){
@@ -189,21 +189,18 @@ var AppController = (function (TodoCtrl, UICtrl) {
     var todos = document.querySelectorAll(DOM.todos);
     todos.forEach(function (item) {
       if (item.querySelector('.content').textContent === contentToDo) {
-
         item.addEventListener('click', function (e) {
-
+          var todo = e.target.parentNode.parentNode.parentNode.parentNode
 
           if(e.target.parentNode.classList.contains('done')){
-            var todo = e.target.parentNode.parentNode.parentNode.parentNode
             TodoCtrl.completeTodo(obj);
             UICtrl.completeTodo(todo);
           } else if(e.target.parentNode.classList.contains('edit')){
-            var todo = e.target.parentNode.parentNode.parentNode.parentNode
             UICtrl.updatedTodo(obj, todo)
 
           } else if(e.target.parentNode.classList.contains('remove')){
-            var todo = e.target.parentNode.parentNode.parentNode.parentNode
-            console.log('remove')
+            UICtrl.removedTodo(obj, todo)
+            TodoCtrl.removeTodo(obj)
           }
         })
       }
