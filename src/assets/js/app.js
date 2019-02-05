@@ -169,11 +169,18 @@ var UIController = (function () {
 var LocalStor = (function () {
   var addTodosStor = function (arr) {
 
-    for (var el in arr) {
+    arr.items.forEach(function (el) {
+      console.log('arr', arr.val)
       UIController.addTodoItem(el, `${arr.val.titleInput}-${arr.id}`)
-      AppController.addTodoController(`${arr.val.titleInput}-${arr.id}`)
-      AppController.todoActions(el, arr.val.titleInput)
-    }
+
+      //AppController.addTodoController(`${arr.val.titleInput}-${arr.id}`)
+      AppController.todoActions(el, el.val)
+    })
+
+      // UIController.addTodoItem(el, `${arr.val.titleInput}-${arr.id}`)
+      // AppController.addTodoController(`${arr.val.titleInput}-${arr.id}`)
+      // AppController.todoActions(el, arr.val.titleInput)
+
   };
   var addContent = function (data) {
     if (data !== null) {
@@ -181,18 +188,8 @@ var LocalStor = (function () {
         UIController.addListItem(item)
         addTodosStor(item)
       })
-      /*for (var i = 0; i < data.lists.length; i++) {
-        item = data.lists[i]
-        UIController.addListItem(item)
-        console.log('item', item)
-        for (var elem = 0; elem < item.items.length; elem++) {
 
-          UIController.addTodoItem(elem, `${item.val.titleInput}-${item.id}`)
-          AppController.addTodoController(`${item.val.titleInput}-${item.id}`)
-          AppController.todoActions(elem, item.val.titleInput)
-
-        }
-      }*/
+      //AppController.init()
 
     }
   };
@@ -309,7 +306,7 @@ var AppController = (function (TodoCtrl, UICtrl, StoreData) {
       data = StoreData.initStor()
       document.querySelector(DOM.inputTitle).value = '';
       setupEventListeners();
-      //return data
+      return data
     }
   }
 })(TodoController, UIController, LocalStor);
