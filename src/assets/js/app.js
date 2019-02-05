@@ -6,10 +6,11 @@ var TodoController = (function () {
     this.val = val;
     this.items = items;
   };
-  var Todos = function (status, val, tabId) {
+  var Todos = function (status, val, tabId, listId) {
     this.status = status;
     this.val = val;
     this.tabId = tabId
+    this.listId = listId
   };
   // Public Object / Modules
 
@@ -32,10 +33,19 @@ var TodoController = (function () {
       LocalStor.addToStor(data)
       return newList;
     },
-    addTodo: function (status, value, tabId) {
+    addTodo: function (status, value, tabId ) {
+      var todoid;
+
+
+      if (data.lists[tabId].items.length > 0) {
+         todoid = data.lists[tabId].items[data.lists[tabId].items.length - 1].listId +1
+        console.log(data.lists[tabId].items[data.lists[tabId].items.length - 1].listId +1)
+      } else {
+        todoid = 0
+      }
       var stat, newTodo;
       stat = false;
-      newTodo = new Todos(stat, value, tabId);
+      newTodo = new Todos(stat, value, tabId, todoid);
       data.lists[tabId].items.push(newTodo);
 
       return newTodo;
@@ -107,11 +117,11 @@ var UIController = (function () {
             </ul>`;
       elem.insertAdjacentHTML('afterend', tab);
     },
-    addTodoItem: function (obj, tabId) {
+    addTodoItem: function (obj, tabId, todoid) {
       var todo, htmlTodo;
       todo = document.querySelector(`#${tabId}`);
       htmlTodo =
-        `<li class="collection-item">
+        `<li class="collection-item" id=#${todoid}>
                     <div class="updateTodo row hide">
                       <input type="text" class="col s9">
                       <span class="col s3">
@@ -153,7 +163,9 @@ var UIController = (function () {
         todo.querySelector('.content').textContent = newVal;
         TodoController.updateTodo(obj, newVal);
         inputEdit.querySelector('input').value = '';
+        inputEdit.querySelector('input').focus();
         inputEdit.classList.toggle("hide");
+        LocalStor.addToStor(data)
 
       })
     },
@@ -166,31 +178,35 @@ var UIController = (function () {
   }
 })();
 
+
+
 var LocalStor = (function () {
   var addTodosStor = function (arr) {
 
     arr.items.forEach(function (el) {
-      console.log('arr', arr.val)
-      UIController.addTodoItem(el, `${arr.val.titleInput}-${arr.id}`)
-
+      UIController.addTodoItem(el, `${arr.val.titleInput}-${arr.id}`, `${el.listId}`)
+      console.log(el)
+      // if(el.status === true) {
+      //   var index = `#${el.listId}`
+      //   console.log(index);
+      //
+      //   var todo = document.querySelector(`#${arr.val.titleInput}-${arr.id} #${el.listId}`)
+      //   todo.classList.add('completed');
+      //   todo.querySelector('.done i').textContent = 'check';
+      // }
       //AppController.addTodoController(`${arr.val.titleInput}-${arr.id}`)
       AppController.todoActions(el, el.val)
+
     })
-
-      // UIController.addTodoItem(el, `${arr.val.titleInput}-${arr.id}`)
-      // AppController.addTodoController(`${arr.val.titleInput}-${arr.id}`)
-      // AppController.todoActions(el, arr.val.titleInput)
-
   };
   var addContent = function (data) {
     if (data !== null) {
       data.lists.forEach(function (item) {
-        UIController.addListItem(item)
+
+        AppController.eventAddTodo(item);
         addTodosStor(item)
+
       })
-
-      //AppController.init()
-
     }
   };
   return {
@@ -244,22 +260,31 @@ var AppController = (function (TodoCtrl, UICtrl, StoreData) {
     // 2. store the value
     newList = TodoCtrl.addItem(value);
     // 3. Add the List in UI
-    UICtrl.addListItem(newList);
-    if (DOM.tabTitleContentTodos !== null) {
-      var addTodoBtns = document.querySelector(DOM.tabTitleContentTodos);
-      var addBtn = document.querySelector(DOM.btnAddTodo);
-      addTodoBtns.addEventListener('click', function (e) {
-        if (e.target === addBtn) {
-          id = e.target.dataset.parent;
-          AppController.addTodoController(id);
-        }
-      });
-    }
+    AppController.eventAddTodo(newList)
   };
 
 
   return {
-    addTodoController: function (id) {
+    eventAddTodo: function (item) {
+      UIController.addListItem(item)
+      var DOM = UIController.getDomStrings()
+      if (DOM.tabTitleContentTodos !== null) {
+        var addTodoBtns = document.querySelector(DOM.tabTitleContentTodos);
+        var addBtn = document.querySelector(DOM.btnAddTodo);
+        addTodoBtns.addEventListener('click', function (e) {
+          if (e.target === addBtn) {
+            id = e.target.dataset.parent;
+            index = id.split('-')
+            todoId = (data.lists[index[0]] +1).toString()
+            console.log(todoId)
+            StoreData.addToStor(data)
+
+            AppController.addTodoController(id, todoId);
+          }
+        });
+      }
+    },
+    addTodoController: function (id, todoId) {
       var newTodo, todoValue, tabId, tabIndex, val;
       // 1. get Input data
       newTodo = UICtrl.getInputTodo(id);
@@ -272,7 +297,7 @@ var AppController = (function (TodoCtrl, UICtrl, StoreData) {
       todoValue = TodoCtrl.addTodo(false, val, tabIndex);
 
       // 4. add new todo
-      UICtrl.addTodoItem(todoValue, id);
+      UICtrl.addTodoItem(todoValue, id, todoId);
       document.querySelector(DOM.inputTodo).value = '';
       AppController.todoActions(todoValue, todoValue.val);
     },
