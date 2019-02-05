@@ -1,3 +1,4 @@
+//console.log(data)
 var TodoController = (function () {
   // Privet Functions
   var Lists = function (id, val, items) {
@@ -11,13 +12,16 @@ var TodoController = (function () {
     this.tabId = tabId
   };
   // Public Object / Modules
-  var data = {
-    lists: [],
-  };
+
+
   return {
+
     addItem: function (value) {
       var id;
+
+
       if (data.lists.length > 0) {
+        debugger
         id = data.lists[data.lists.length - 1].id + 1
       } else {
         id = 0
@@ -25,13 +29,17 @@ var TodoController = (function () {
       var items = [];
       var newList = new Lists(id, value, items);
       data.lists.push(newList);
+      // Store
+      LocalStor.addToStor(data)
       return newList;
     },
     addTodo: function (status, value, tabId) {
       var stat, newTodo;
       stat = false;
       newTodo = new Todos(stat, value, tabId);
+      console.log(data)
       data.lists[tabId].items.push(newTodo);
+
       return newTodo;
     },
     completeTodo: function (obj) {
@@ -77,11 +85,12 @@ var UIController = (function () {
     addListItem: function (obj) {
       var html, elem, tab;
       elem = document.querySelector(DOMStrings.tabs);
-      html =
-        `<li class="tab col" id="${obj.id}">
+      html = function() {
+        return `<li class="tab col" id="${obj.id}">
           <a href="#${obj.val.titleInput}">${obj.val.titleInput}</a>
         </li>`;
-      elem.insertAdjacentHTML('beforeend', html);
+      };
+      elem.insertAdjacentHTML('beforeend', html());
       tab = `<ul class="collection with-header active" id="${obj.val.titleInput}-${obj.id}">
               <li class="collection-header row">
                 <h4 class=" col s5" >
@@ -127,34 +136,86 @@ var UIController = (function () {
       todo.insertAdjacentHTML('beforeend', htmlTodo)
     },
     completeTodo: function(todo) {
-      todo.classList.toggle('completed')
+      todo.classList.toggle('completed');
       if(todo.querySelector('.done i').textContent === 'check') {
-        todo.querySelector('.done i').textContent = 'crop_square'
+        todo.querySelector('.done i').textContent = 'crop_square';
       } else {
-        todo.querySelector('.done i').textContent = 'check'
+        todo.querySelector('.done i').textContent = 'check';
       }
     },
     updatedTodo: function(obj, todo) {
-      var inputEdit = todo.querySelector('.updateTodo')
-      inputEdit.classList.toggle("hide")
+      var inputEdit = todo.querySelector('.updateTodo');
+      inputEdit.classList.toggle("hide");
       inputEdit.querySelector('input').value = todo.querySelector('.content').textContent;
       inputEdit.querySelector('.btn').addEventListener('click', function (e) {
         e.preventDefault();
-        var newVal = inputEdit.querySelector('input').value
+        var newVal = inputEdit.querySelector('input').value;
         todo.querySelector('.content').textContent = newVal;
-        TodoController.updateTodo(obj, newVal)
-        inputEdit.classList.toggle("hide")
+        TodoController.updateTodo(obj, newVal);
+        inputEdit.querySelector('input').value = '';
+        inputEdit.classList.toggle("hide");
+
       })
     },
     removedTodo: function(obj, todo) {
-      todo.parentNode.removeChild(todo)
+      todo.parentNode.removeChild(todo);
     },
     getDomStrings: function () {
-      return DOMStrings
+      return DOMStrings;
     }
   }
 })();
-var AppController = (function (TodoCtrl, UICtrl) {
+
+var LocalStor = (function () {
+  var addContent= function (data) {
+
+    if(data !== null){
+      data.lists.forEach(function (item) {
+
+        UIController.addListItem(item)
+        var objs = Array.prototype.slice.call(item.items, 0)
+        objs.forEach(todo => {
+          UIController.addTodoItem(todo, `${item.val.titleInput}-${item.id}`)
+          AppController.addTodoController(`${item.val.titleInput}-${item.id}`)
+          AppController.todoActions(todo,item.val.titleInput)
+
+        })
+
+      })
+    }
+    return data
+  };
+  return {
+    addToStor: function (data) {
+      localStorage.setItem("data", JSON.stringify(data))
+    },
+    initStor: function () {
+      //TodoController.data = localStorage.getItem("data")
+
+     var  data;
+      //console.log(JSON.parse(localStorage.getItem("data")));
+      if (localStorage.getItem("data") !== null) {
+        data = JSON.parse(localStorage.getItem("data"))
+        addContent(data)
+      } else {
+        data = {
+          lists: []
+        }
+      }
+
+      return data
+
+      //console.log(JSON.parse(localStorage.getItem("data")).lists.length)
+    },
+
+    clearStore: function () {
+      localStorage.clear()
+    }
+  }
+  //return console.log(JSON.parse(localStorage.getItem('data')))
+
+})()
+var AppController = (function (TodoCtrl, UICtrl, StoreData) {
   var DOM = UICtrl.getDomStrings();
   var setupEventListeners = function () {
     var addListBtn = document.querySelector(DOM.btnAddList);
@@ -179,55 +240,64 @@ var AppController = (function (TodoCtrl, UICtrl) {
       var addBtn = document.querySelector(DOM.btnAddTodo);
       addTodoBtns.addEventListener('click', function (e) {
         if(e.target === addBtn) {
-          id = e.target.dataset.parent
-          addTodoController(id)
+          id = e.target.dataset.parent;
+          console.log(id)
+          AppController.addTodoController(id);
         }
       });
     }
   };
-  var todoActions = function (obj ,contentToDo) {
-    var todos = document.querySelectorAll(DOM.todos);
-    todos.forEach(function (item) {
-      if (item.querySelector('.content').textContent === contentToDo) {
-        item.addEventListener('click', function (e) {
-          var todo = e.target.parentNode.parentNode.parentNode.parentNode
 
-          if(e.target.parentNode.classList.contains('done')){
-            TodoCtrl.completeTodo(obj);
-            UICtrl.completeTodo(todo);
-          } else if(e.target.parentNode.classList.contains('edit')){
-            UICtrl.updatedTodo(obj, todo)
 
-          } else if(e.target.parentNode.classList.contains('remove')){
-            UICtrl.removedTodo(obj, todo)
-            TodoCtrl.removeTodo(obj)
-          }
-        })
-      }
-    })
-
-  };
-  var addTodoController= function (id) {
-    var newTodo, todoValue, tabId, tabIndex, val;
-    // 1. get Input data
-    newTodo = UICtrl.getInputTodo(id);
-    tabId = id;
-    tabId = tabId.split('-');
-    tabIndex = tabId[tabId.length -1];
-    tabIndex = parseInt(tabIndex);
-    val = newTodo.titleTab;
-    //status, value, tabId
-    todoValue = TodoCtrl.addTodo(false, val, tabIndex);
-    // 4. add new todo
-    UICtrl.addTodoItem(todoValue, id);
-    document.querySelector(DOM.inputTodo).value = '';
-    todoActions(todoValue, todoValue.val);
-  };
   return {
+    addTodoController: function (id) {
+      var newTodo, todoValue, tabId, tabIndex, val;
+      // 1. get Input data
+      newTodo = UICtrl.getInputTodo(id);
+      tabId = id;
+      tabId = tabId.split('-');
+      tabIndex = tabId[tabId.length -1];
+      tabIndex = parseInt(tabIndex);
+      val = newTodo.titleTab;
+      //status, value, tabId
+      todoValue = TodoCtrl.addTodo(false, val, tabIndex);
+
+      // 4. add new todo
+      UICtrl.addTodoItem(todoValue, id);
+      document.querySelector(DOM.inputTodo).value = '';
+      AppController.todoActions(todoValue, todoValue.val);
+    },
+    todoActions: function (obj ,contentToDo) {
+      var todos = document.querySelectorAll(DOM.todos);
+      todos.forEach(function (item) {
+        if (item.querySelector('.content').textContent === contentToDo) {
+          item.addEventListener('click', function (e) {
+            var todo = e.target.parentNode.parentNode.parentNode.parentNode;
+            if(e.target.parentNode.classList.contains('done')){
+              TodoCtrl.completeTodo(obj);
+              UICtrl.completeTodo(todo);
+              LocalStor.addToStor(data)
+            } else if(e.target.parentNode.classList.contains('edit')){
+              UICtrl.updatedTodo(obj, todo);
+              LocalStor.addToStor(data)
+
+            } else if(e.target.parentNode.classList.contains('remove')){
+              UICtrl.removedTodo(obj, todo);
+              TodoCtrl.removeTodo(obj);
+
+              LocalStor.addToStor(data)
+            }
+          })
+        }
+      });
+    },
     init: function () {
+      data =  StoreData.initStor()
       document.querySelector(DOM.inputTitle).value = '';
       setupEventListeners();
+      console.log(data);
+      return data
     }
   }
-})(TodoController, UIController);
+})(TodoController, UIController, LocalStor);
 AppController.init();
