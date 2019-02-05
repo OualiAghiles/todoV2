@@ -1,0 +1,64 @@
+doctype html
+html(lang='en')
+  head
+    // Required meta tags
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
+    // Bootstrap CSS
+    link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.css')
+    title Hello, world!
+
+  body(cz-shortcut-listen='true')
+    .ui.fixed.inverted.menu
+      .ui.container
+        a.header.item(href='#')
+          img.logo(src='assets/images/logo.png')
+          |         Project Name
+        a.item(href='#') Home
+        .ui.simple.dropdown.item
+          | Dropdown
+          i.dropdown.icon
+          .menu
+            a.item(href='#') Link Item
+            a.item(href='#') Link Item
+            .divider
+            .header Header Item
+            .item
+              i.dropdown.icon
+              |             Sub Menu
+              .menu
+                a.item(href='#') Link Item
+                a.item(href='#') Link Item
+            a.item(href='#') Link Item
+    .ui.main.text.container(style="margin-top:7em")
+      h1.ui.header Todos
+      .ui.top.attached.tabular.menu
+        .active.item Tab
+      .ui.bottom.attached.active.tab.segment
+        .content
+          .ui.middle.aligned.divided.list
+            .item
+              .content
+                i.check.icon
+                | Lena
+              .right.floated.content
+                .ui.mini.basic.icon.buttons
+                  button.ui.button
+                    i.edit.icon
+                  button.ui.button
+                    i.remove.icon
+            .item
+              .content
+                .ui.fluid.action.input
+                  input(type='text', placeholder='Search...')
+                  .ui.button valider
+
+              //.content
+                i.check.icon
+                | Lena
+                .right.floated.content
+                  .ui.mini.basic.icon.buttons
+                    button.ui.button
+                      i.edit.icon
+                    button.ui.button
+                      i.remove.icon
